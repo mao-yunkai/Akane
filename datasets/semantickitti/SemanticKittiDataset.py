@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import yaml
+import torch
 from torch.utils.data import Dataset
 
 class SemanticKittiDataset(Dataset):
@@ -24,13 +25,12 @@ class SemanticKittiDataset(Dataset):
     
     def __getitem__(self, index):
         data = np.fromfile(self.data_list[index], dtype=np.float32).reshape(-1,4)
-        label = np.fromfile(self.label_list[index], dtype=np.int32).reshape(-1,1)
-        label = label & 0xFFFF
-        label = np.vectorize(self.learning_map.__getitem__)(label)
-        return data, label
+        labels = np.fromfile(self.label_list[index], dtype=np.int32).reshape(-1,1)
+        labels = labels & 0xFFFF
+        labels = np.vectorize(self.learning_map.__getitem__)(labels)
+        return data, labels
     
     def learning_label_map(self):
-        # 构建映射关系
         learning_map = {}
         learning_map_inv = {}
 
@@ -43,3 +43,9 @@ class SemanticKittiDataset(Dataset):
             else:
                 learning_map[key] = 0
         return learning_map, learning_map_inv
+
+    @staticmethod
+    def collate_fn(data):
+        data2stack=np.stack([d[0] for d in data]).astype(np.float32)
+        label2stack=np.stack([d[1] for d in data])
+        return torch.from_numpy(data2stack),torch.from_numpy(label2stack)
