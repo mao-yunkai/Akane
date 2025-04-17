@@ -36,7 +36,6 @@ class SemanticKittiDataset(Dataset):
 
         for key, value in self.labels.items():
             if value in self.learning_labels.values():
-                # 找到对应的learning_labels键
                 learning_key = list(self.learning_labels.keys())[list(self.learning_labels.values()).index(value)]
                 learning_map_inv[learning_key] = key
                 learning_map[key] = learning_key
